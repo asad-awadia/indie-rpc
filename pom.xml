@@ -6,7 +6,7 @@
 
   <groupId>dev.aawadia</groupId>
   <artifactId>indie-rpc</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.1</version>
 
   <properties>
     <maven.compiler.source>16</maven.compiler.source>
