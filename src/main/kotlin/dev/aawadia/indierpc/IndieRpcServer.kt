@@ -16,15 +16,13 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KVisibility
-import kotlin.reflect.full.createInstance
 import kotlin.reflect.full.declaredFunctions
 import kotlin.reflect.jvm.javaType
 
 private data class ServiceRecord(
   val function: KFunction<*>,
   val service: KClass<*>,
-  val cleanInstance: Boolean,
-  val serviceInstance: Any?
+  val serviceInstance: Any
 )
 
 class IndieRpcServer {
@@ -61,8 +59,7 @@ class IndieRpcServer {
     latch.await()
   }
 
-  fun registerService(name: String, service: KClass<*>, version: String = "v1", cleanInstance: Boolean = true) {
-
+  fun <T : Any> registerService(name: String, serviceInstance: T, version: String = "v1") {
     fun validateServiceMethod(function: KFunction<*>): Boolean {
       return function.visibility == KVisibility.PUBLIC
           && function.parameters.size == 2
@@ -70,16 +67,14 @@ class IndieRpcServer {
           && (function.returnType.classifier as KClass<*>).isData
     }
 
-    val instance = if (cleanInstance) null else service.createInstance()
-
     fun registerMethod(function: KFunction<*>) {
       serviceRegistry.putIfAbsent(
         "$version.$name.${function.name}",
-        ServiceRecord(function, service, cleanInstance, instance)
+        ServiceRecord(function, serviceInstance::class, serviceInstance)
       )
     }
 
-    service.declaredFunctions
+    serviceInstance::class.declaredFunctions
       .filter { validateServiceMethod(it) }
       .forEach { registerMethod(it) }
   }
@@ -91,11 +86,10 @@ class IndieRpcServer {
         Json.encodeToBuffer(Unit)
       ).toBuffer()
 
-    val serviceInstance =
-      if (serviceRecord.cleanInstance) serviceRecord.service.createInstance() else serviceRecord.serviceInstance
     val request = Json.decodeValue(rpcRequest.payload, serviceRecord.function.parameters[1].type.javaType as Class<*>)
     val response =
-      serviceRecord.function.call(serviceInstance, request) ?: return nullResponse(rpcRequest.header.requestID)
+      serviceRecord.function.call(serviceRecord.serviceInstance, request)
+        ?: return nullResponse(rpcRequest.header.requestID)
 
     return RpcResponse(
       Header(true, "", requestID = rpcRequest.header.requestID), Json.encodeToBuffer(response)

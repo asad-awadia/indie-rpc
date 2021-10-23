@@ -18,12 +18,14 @@ class ShaService {
 }
 
 fun main() {
+  val serviceName = "sha.svc"
+  val service = ShaService()
   val rpc = IndieRpcServer()
-  rpc.registerService("sha.svc", ShaService::class)
+  rpc.registerService(serviceName, service)
   rpc.startServer()
   val client = IndieRpcClient()
   val result: Result<ShaService.ShaResponse> = client.invokeRpcMethod(
-    RpcTarget("sha.svc", "sha"),
+    RpcTarget(serviceName, "sha"),
     ShaService.ShaRequest(UUID.randomUUID().toString()),
     ShaService.ShaResponse::class.java
   )

@@ -15,28 +15,28 @@ architecture to the already existing http layer that was already there.
 
 # Usage
 
-Register classes that implement your service interface. The only methods that will be registered
-will be the ones that take in a single parameter of type data class and return a data class.
+Register instances that implement your service interface. The same instance will be used to service each request
+. The only methods that will be registered will be the ones that take in a single parameter of type data class and return a data class.
 
 ```kotlin
-class MathService {
+class MathService(private val const: Int) {
   data class AddRequest(val x: Int, val y: Int)
   data class AddResponse(val sum: Int)
 
   fun sum(addRequest: AddRequest): AddResponse {
-    return AddResponse(addRequest.x + addRequest.y)
+    return AddResponse(addRequest.x + addRequest.y + const)
   }
 }
 
 val serviceName = "math.svc"
-
+val mathService = MathService(5)
 val indieServer = IndieRpcServer()
-indieServer.registerService(serviceName, MathService::class)
+indieServer.registerService(serviceName, mathService)
 indieServer.startServer()
 
 val indieClient = IndieRpcClient()
 
-// returns Result<AddResponse>
+// returns Result<AddResponse> -> <success, 8>
 val addResponseResult = indieClient.invokeRpcMethod(
   RpcTarget(serviceName, "sum"),
   MathService.AddRequest(1, 2),
