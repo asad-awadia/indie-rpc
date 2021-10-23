@@ -44,6 +44,24 @@ val addResponseResult = indieClient.invokeRpcMethod(
 )
 ```
 
+## Maven
+In your pom file add
+```xml
+<repositories>
+  <repository>
+    <id>github</id>
+    <url>https://maven.pkg.github.com/asad-awadia/indie-rpc</url>
+  </repository>
+</repositories>
+
+  
+<dependency>
+  <groupId>dev.aawadia</groupId>
+  <artifactId>indie-rpc</artifactId>
+  <version>0.1.0</version>
+</dependency>
+```
+
 ## Tech notes
 
 The server and client both use Vert.x. 
