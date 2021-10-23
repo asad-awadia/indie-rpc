@@ -40,7 +40,7 @@ class IndieRpcClient(private val host: String = "localhost", private val port: I
   private fun <T> processResponseBuffer(buffer: Buffer, responseType: Class<T>): Result<T> {
     val rpcResponse = fromBuffer(buffer, RpcResponse::class.java)
     return when {
-      rpcResponse.header.success -> Result.success(Json.decodeValue(rpcResponse.payload, responseType))
+      rpcResponse.header.success -> runCatching { Json.decodeValue(rpcResponse.payload, responseType) }
       else -> Result.failure(Throwable(rpcResponse.header.error))
     }
   }
